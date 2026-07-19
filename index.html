@@ -81,8 +81,11 @@ button{font-family:inherit}
 .fgrp label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .fgrp select{border:1px solid var(--border);background:var(--card);border-radius:11px;padding:9px 30px 9px 12px;font-family:inherit;font-size:14px;color:var(--ink);cursor:pointer;box-shadow:var(--shadow);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8578' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 10px center}
 .fgrp select:focus{outline:none;border-color:var(--green)}
+.fgrp input.fnum{border:1px solid var(--border);background:var(--card);border-radius:11px;padding:9px 11px;font-family:inherit;font-size:14px;color:var(--ink);width:92px;box-shadow:var(--shadow)}
+.fgrp input.fnum:focus{outline:none;border-color:var(--green)}
+.fgrp input.fnum::-webkit-outer-spin-button,.fgrp input.fnum::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .freset{border:0;background:none;color:var(--green);font-weight:700;cursor:pointer;font-size:13px;padding:9px 4px}
-@media(max-width:600px){.filters{gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;margin-bottom:12px}.fgrp{flex:none}.fgrp select{padding:8px 26px 8px 10px;font-size:13px}.fgrp label{font-size:10px}}
+@media(max-width:600px){.filters{gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;margin-bottom:12px}.fgrp{flex:none}.fgrp select{padding:8px 26px 8px 10px;font-size:13px}.fgrp label{font-size:10px}.fgrp input.fnum{width:74px;padding:8px 9px;font-size:13px}}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:18px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:13px;box-shadow:var(--shadow);
   display:flex;flex-direction:column;position:relative;min-width:0;transition:transform .14s,box-shadow .14s}
@@ -242,29 +245,27 @@ button{font-family:inherit}
     <div id="shared" class="banner" style="display:none"></div>
     <div class="crumbs"><h2 id="crumbTitle">All products</h2><span class="count" id="count"></span></div>
     <div class="filters">
-      <div class="fgrp"><label>Price</label>
-        <select id="fPrice" onchange="applyFilters()">
-          <option value="any">Any price</option>
-          <option value="u50">Under ₹50</option>
-          <option value="50-100">₹50–100</option>
-          <option value="100-250">₹100–250</option>
-          <option value="250-500">₹250–500</option>
-          <option value="o500">Over ₹500</option>
-        </select></div>
-      <div class="fgrp"><label>Size</label>
-        <select id="fSize" onchange="applyFilters()" title="Small / Medium / Large pack">
+      <div class="fgrp"><label>Min ₹</label>
+        <input type="number" id="fMin" class="fnum" inputmode="numeric" min="0" placeholder="min" oninput="filterDebounced()"></div>
+      <div class="fgrp"><label>Max ₹</label>
+        <input type="number" id="fMax" class="fnum" inputmode="numeric" min="0" placeholder="max" oninput="filterDebounced()"></div>
+      <div class="fgrp"><label>Size · weight/vol</label>
+        <select id="fSize" onchange="applyFilters()">
           <option value="any">Any size</option>
-          <option value="small">Small</option>
-          <option value="medium">Medium</option>
-          <option value="large">Large</option>
+          <option value="s250">Up to 250 g/ml</option>
+          <option value="250-500">250–500 g/ml</option>
+          <option value="500-1000">500 g/ml – 1 kg/L</option>
+          <option value="1000-5000">1 – 5 kg/L</option>
+          <option value="5000+">Over 5 kg/L</option>
         </select></div>
-      <div class="fgrp"><label>Pieces</label>
+      <div class="fgrp"><label>Pieces · count</label>
         <select id="fPieces" onchange="applyFilters()">
-          <option value="any">Any pack</option>
-          <option value="single">Single (1)</option>
-          <option value="small">2–6</option>
-          <option value="medium">7–12</option>
-          <option value="large">12+</option>
+          <option value="any">Any count</option>
+          <option value="1">Single (1)</option>
+          <option value="2-6">2–6</option>
+          <option value="6-12">6–12</option>
+          <option value="12-30">12–30</option>
+          <option value="30+">30+</option>
         </select></div>
       <button class="freset" id="freset" onclick="resetFilters()" style="display:none">Reset filters</button>
     </div>
@@ -456,16 +457,23 @@ function parseSize(s){
   } else if(mpc||mx||/\bpc|piece|egg|unit\b/.test(s)){unit="count";base=pieces;}
   return {unit,base,pieces};
 }
-function sizeBand(p){
-  if(p._unit==="weight") return p._base<250?"small":p._base<=1000?"medium":"large";
-  if(p._unit==="volume") return p._base<500?"small":p._base<=1000?"medium":"large";
-  if(p._unit==="count")  return p._pieces<=6?"small":p._pieces<=12?"medium":"large";
-  return "other";
+/* size = weight/volume magnitude (grams or ml). counted items handled by pieces. */
+function sizeOk(p,f){
+  if(f==="any") return true;
+  if(p._unit!=="weight" && p._unit!=="volume") return false;
+  const b=p._base;
+  return (f==="s250"&&b<=250)||(f==="250-500"&&b>250&&b<=500)||(f==="500-1000"&&b>500&&b<=1000)
+       ||(f==="1000-5000"&&b>1000&&b<=5000)||(f==="5000+"&&b>5000);
 }
-function piecesBand(p){const n=p._pieces||1; return n<=1?"single":n<=6?"small":n<=12?"medium":"large";}
-function priceOk(v,f){return f==="any"||(f==="u50"&&v<50)||(f==="50-100"&&v>=50&&v<100)||(f==="100-250"&&v>=100&&v<250)||(f==="250-500"&&v>=250&&v<500)||(f==="o500"&&v>=500);}
+/* pieces = count (12 eggs, 6 spoons, packs of N) */
+function piecesOk(p,f){
+  if(f==="any") return true;
+  const n=p._pieces||1;
+  return (f==="1"&&n<=1)||(f==="2-6"&&n>=2&&n<=6)||(f==="6-12"&&n>=6&&n<=12)||(f==="12-30"&&n>=12&&n<=30)||(f==="30+"&&n>=30);
+}
 function applyFilters(){render();}
-function resetFilters(){$("#fPrice").value="any";$("#fSize").value="any";$("#fPieces").value="any";render();}
+let filtT; function filterDebounced(){clearTimeout(filtT);filtT=setTimeout(render,300);}
+function resetFilters(){$("#fMin").value="";$("#fMax").value="";$("#fSize").value="any";$("#fPieces").value="any";render();}
 
 /* relevance score: exact word > starts-with > substring > brand > category.
    returns -1 if a query token doesn't match at all. */
@@ -501,11 +509,13 @@ function render(){
   const qtokens=norm($("#q").value).split(/[\s,]+/).filter(Boolean);
   let arr=DB.products;
   if(activeCat!=="All") arr=arr.filter(p=>(p.c||"").split("/")[0]===activeCat);
-  const fp=($("#fPrice")||{}).value||"any", fsz=($("#fSize")||{}).value||"any", fpc=($("#fPieces")||{}).value||"any";
-  if(fp!=="any") arr=arr.filter(p=>priceOk(p.p,fp));
-  if(fsz!=="any") arr=arr.filter(p=>sizeBand(p)===fsz);
-  if(fpc!=="any") arr=arr.filter(p=>piecesBand(p)===fpc);
-  const fr=$("#freset"); if(fr) fr.style.display=(fp!=="any"||fsz!=="any"||fpc!=="any")?"inline-block":"none";
+  const pmin=parseFloat(($("#fMin")||{}).value)||0;
+  const pmaxV=parseFloat(($("#fMax")||{}).value); const pmax=isNaN(pmaxV)?Infinity:pmaxV;
+  const fsz=($("#fSize")||{}).value||"any", fpc=($("#fPieces")||{}).value||"any";
+  if(pmin>0||pmax!==Infinity) arr=arr.filter(p=>p.p>=pmin&&p.p<=pmax);
+  if(fsz!=="any") arr=arr.filter(p=>sizeOk(p,fsz));
+  if(fpc!=="any") arr=arr.filter(p=>piecesOk(p,fpc));
+  const fr=$("#freset"); if(fr) fr.style.display=(pmin>0||pmax!==Infinity||fsz!=="any"||fpc!=="any")?"inline-block":"none";
   if(qtokens.length){
     const exps=qtokens.map(t=>({cands:expand(t),pt:ph(t)}));
     const scored=[];
