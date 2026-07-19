@@ -1,57 +1,67 @@
-# Thaila — grab & go
+# Thaila — grab & go 🛍️
 
-A grown-up-funky grocery-list web app for your family. Search products (in
-English, transliterated Marathi, or Marathi — plus voice search), build a list,
-and share it on WhatsApp as an **editable link**. Whoever opens it can tweak the
-list and re-share their version. Runs entirely in the browser, so it hosts free
-on GitHub Pages — no backend, no database, no sign-ups. The shared list is
-encoded into the link itself, so it stays private to whoever you send it to.
+**Live site → https://saj1919.github.io/thaila/**
+Repo → https://github.com/saj1919/thaila
+
+A grown-up-funky grocery checklist for the family. Search products (English,
+transliterated Marathi, Marathi, or voice), build a list, tick off what you
+already have, and share it on WhatsApp as an **editable link**. Runs entirely in
+the browser — free on GitHub Pages, no backend, no database, no sign-ups. The
+shared list is encoded into the link itself, so it stays private to whoever you
+send it to.
+
+> If the live link 404s, enable Pages once: repo **Settings → Pages → Source:
+> Deploy from a branch → main / root → Save**, then wait ~1 minute.
 
 ## Files
 ```
-site/
-├── index.html       the whole app (search + voice + list + WhatsApp share)
-└── products.json    the catalog it searches
+index.html      the whole app (search + voice + checklist + WhatsApp share)
+products.json   the catalog it searches
+LICENSE.txt     license (CC BY-NC-ND 4.0)
 ```
 
 ## Features
-- **Multilingual search** — type `milk`, `kanda`, `दूध`, `tup`, `atta`, `batata`… it
-  understands Marathi/Hindi terms and Devanagari and maps them to the right products.
-- **Voice search** — mic button, toggle EN / मराठी.
-- **Unavailable items included** — out-of-stock products are shown and tagged; a
-  "Hide unavailable" toggle filters them out when you want.
-- **Editable share link** — the list travels inside the URL; nothing is stored on a server.
+- **Smart search** — 300+ Marathi/Hindi terms plus phonetic matching on every
+  product, so `mith`/`meeth`→salt, `doodh`→milk, `कांदा`→onion, `karle`→bitter
+  gourd, `nachni`→ragi flour all just work.
+- **Voice search** — mic button; speak your item.
+- **Checklist** — tick items as you buy them; bought items sink down and show a
+  "✓ Got" state. The list shows what you still need vs already have.
+- **Editable share link** — the list (with ticks) travels inside the URL.
 
-## Put your catalog in
-Generate `products.json` from your collected catalog CSV:
+## Update the data
+From the project root (where the scraper lives):
 ```bash
-python3 make_products_json.py           # auto-finds the catalog CSV in data/
+python3 make_products_json.py     # rebuilds products.json from your latest scrape
 ```
-(The repo ships with a tiny demo `products.json` so the page works right away.)
+Then commit & push (see below). The demo `products.json` is replaced by your full catalog.
 
-## Preview locally
-`fetch()` needs a server (not file://):
+## Publish / update on GitHub Pages
+First time (repo already created at github.com/saj1919/thaila):
 ```bash
 cd site
-python3 -m http.server        # open http://localhost:8000
+git init
+git add .
+git commit -m "thaila"
+git branch -M main
+git remote add origin https://github.com/saj1919/thaila.git
+git push -u origin main
+```
+Then enable **Settings → Pages → main / root**. Live at:
+```
+https://saj1919.github.io/thaila/
+```
+Later updates are just:
+```bash
+git add . && git commit -m "update" && git push
 ```
 
-## Host on GitHub Pages (free)
-1. Put the **contents of this `site/` folder** at a repo's root (so `index.html` and
-   `products.json` are top-level):
-   ```bash
-   cd site
-   git init && git add . && git commit -m "thaila"
-   git branch -M main
-   git remote add origin https://github.com/<you>/thaila.git
-   git push -u origin main
-   ```
-2. GitHub → **Settings → Pages → Source: Deploy from a branch → main / root** → Save.
-3. Live in ~a minute at `https://<you>.github.io/thaila/`.
+## Weekly auto-refresh
+Use `refresh.sh` (in the project root) + a weekly cron job — full steps in `DEPLOY.md`.
 
 ## How sharing works
-Build a list → **Share on WhatsApp**. It sends your items plus a link like
-`…/thaila/#l=<encoded-list>`. Whoever opens it gets the list pre-loaded, edits it,
-and shares their updated link back. All client-side.
+Build a list → **Share on WhatsApp**. It sends your items (⬜ to buy / ✅ already
+have) plus a link like `https://saj1919.github.io/thaila/#l=…`. Whoever opens it
+gets the list pre-loaded, edits it, and shares their updated link back.
 
-> This is a personal reference list for your own household use.
+> Personal reference list for household use. See LICENSE.txt.
