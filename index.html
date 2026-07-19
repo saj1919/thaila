@@ -604,28 +604,46 @@ function copyLink(){navigator.clipboard.writeText(shareURL()).then(()=>toast("Li
 function showClear(){const c=$("#clr");if(c)c.style.display=$("#q").value?'flex':'none';}
 function hideSuggest(){const b=$("#suggest");if(b){b.hidden=true;b.innerHTML="";}}
 function clearSearch(){$("#q").value="";hideSuggest();showClear();render();$("#q").focus();}
-function suggest(){
-  showClear();
-  const q=norm($("#q").value), box=$("#suggest");
-  if(q.length<1){hideSuggest();return;}
-  const items=[], seenTerm=new Set();
-  (DB.categories||[]).forEach(c=>{const pc=pretty(c);
-    if(norm(pc).includes(q)||norm(c).includes(q)) items.push({t:'cat',label:pc,slug:c,ico:catIcon(c)});});
-  for(const k in ALIAS){                              // "kanda → onion" style hints
-    if(/^[a-z]/.test(k) && k.startsWith(q)){const en=ALIAS[k].split(" ")[0];
-      if(!seenTerm.has(en)){seenTerm.add(en); items.push({t:'term',label:k+" → "+en,term:en});}}
-    if(items.length>18) break;
+const escAttr=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function matchLite(p,exps){          // fast boolean: does product match the query?
+  for(const {cands,pt} of exps){
+    let ok=false;
+    for(const e of cands){ if(e && p._blob.includes(e)){ok=true;break;} }
+    if(!ok && pt.length>=3){ const phs=p._ph||[]; if(phs.some(w=>w.includes(pt))) ok=true; }
+    if(!ok) return false;
   }
-  const list=items.slice(0,7);
-  if(!list.length){hideSuggest();return;}
-  box.innerHTML=list.map(s=> s.t==='cat'
-    ? `<div class="sg" onmousedown="chooseCat('${s.slug.replace(/'/g,"")}')"><span class="ic">${s.ico}</span>${s.label}<span class="k">category</span></div>`
-    : `<div class="sg" onmousedown="chooseTerm('${s.term.replace(/'/g,"")}')"><span class="ic">🔎</span>${s.label}<span class="k">search</span></div>`
-  ).join("");
+  return true;
+}
+let sugT;
+function suggest(){ showClear(); clearTimeout(sugT); sugT=setTimeout(suggestNow,120); }
+function suggestNow(){
+  const raw=$("#q").value.trim(), q=norm(raw), box=$("#suggest");
+  if(q.length<2){hideSuggest();return;}
+  const qtokens=q.split(/[\s,]+/).filter(Boolean);
+  const exps=qtokens.map(t=>({cands:expand(t),pt:ph(t)}));
+  const tally={}; let total=0;
+  for(const p of DB.products){ if(matchLite(p,exps)){ const l0=(p.c||"").split("/")[0]||"other"; tally[l0]=(tally[l0]||0)+1; total++; } }
+  const rows=[];
+  (DB.categories||[]).forEach(c=>{ if(rows.length<2 && norm(pretty(c)).includes(q)) rows.push({kind:"jump",slug:c,label:pretty(c),ico:catIcon(c)}); });
+  let hint=""; const a=ALIAS[qtokens[0]]; if(a){const w=a.split(" ")[0]; if(w!==qtokens[0]) hint=w;}
+  if(total>0) rows.push({kind:"all",term:raw,count:total,hint});
+  Object.keys(tally).sort((x,y)=>tally[y]-tally[x]).slice(0,6).forEach(c=>
+    rows.push({kind:"incat",term:raw,slug:c,cat:pretty(c),ico:catIcon(c),count:tally[c]}));
+  if(!rows.length){hideSuggest();return;}
+  box.innerHTML=rows.map(r=>{
+    const t=escAttr(r.term||""), cat=escAttr(r.slug||"All"), ico=r.ico||"🔎", lbl=escAttr(raw);
+    if(r.kind==="jump") return `<div class="sg" data-term="" data-cat="${cat}" onmousedown="sgClick(this)"><span class="ic">${ico}</span>Browse ${escAttr(r.label)}<span class="k">category</span></div>`;
+    if(r.kind==="all")  return `<div class="sg" data-term="${t}" data-cat="All" onmousedown="sgClick(this)"><span class="ic">🔎</span><b>${lbl}</b>${r.hint?` <span style="color:var(--muted)">→ ${escAttr(r.hint)}</span>`:""}<span class="k">${r.count} · all</span></div>`;
+    return `<div class="sg" data-term="${t}" data-cat="${cat}" onmousedown="sgClick(this)"><span class="ic">${ico}</span>${lbl} <span style="color:var(--muted)">in ${escAttr(r.cat)}</span><span class="k">${r.count}</span></div>`;
+  }).join("");
   box.hidden=false;
 }
-function chooseCat(slug){$("#q").value="";showClear();hideSuggest();pickCat(slug);}
-function chooseTerm(term){$("#q").value=term;showClear();hideSuggest();render();}
+function sgClick(el){ pickSearch(el.dataset.term, el.dataset.cat); }
+function pickSearch(term,l0){
+  $("#q").value=term; showClear(); hideSuggest(); shown=60; activeCat=l0;
+  $("#crumbTitle").textContent = l0==="All" ? "All products" : pretty(l0);
+  renderCats(); render();
+}
 
 /* ------- voice ------- */
 let rec=null;
