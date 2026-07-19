@@ -30,7 +30,7 @@ button{font-family:inherit}
 .searchBox{flex:1;max-width:620px;display:flex;align-items:center;gap:8px;background:var(--card);
   border:1px solid var(--border);border-radius:14px;padding:0 6px 0 14px;box-shadow:var(--shadow)}
 .searchBox svg{flex:none;opacity:.5}
-.searchBox input{flex:1;border:0;background:none;outline:none;font-size:15.5px;padding:12px 4px;color:var(--ink);font-family:inherit}
+.searchBox input{flex:1;border:0;background:none;outline:none;font-size:16px;padding:12px 4px;color:var(--ink);font-family:inherit}
 .mic{border:1px solid var(--border);background:var(--card);width:40px;height:40px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink)}
 .mic.live{background:var(--coral);color:#fff;border-color:var(--coral);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,90,77,.5)}50%{box-shadow:0 0 0 7px rgba(255,90,77,0)}}
@@ -137,13 +137,47 @@ button{font-family:inherit}
 .prog .fill{height:100%;background:var(--green);border-radius:6px;transition:width .25s}
 .grand small{display:block;font-family:'Inter';font-size:12px;font-weight:600;color:var(--green)}
 
+/* ---- tablet: category rail goes horizontal ---- */
 @media(max-width:860px){
-  .layout{grid-template-columns:1fr;gap:14px}
-  .sidebar{position:static;max-height:none;flex-direction:column}
-  .catlist{flex-direction:row;overflow-x:auto;gap:6px}
-  .catItem{flex-direction:column;gap:3px;padding:8px 12px;min-width:74px;text-align:center}
-  .catItem .cnt{display:none}.catItem .ico{font-size:20px}
+  .layout{grid-template-columns:1fr;gap:14px;padding:16px 14px 130px}
+  .sidebar{position:static;max-height:none;padding:14px}
+  .sidebar h3{margin-bottom:8px}
+  .catlist{flex-direction:row;overflow-x:auto;gap:6px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;margin:0;padding-bottom:2px}
+  .catItem{flex-direction:column;gap:4px;padding:9px 12px;min-width:78px;text-align:center;scroll-snap-align:start}
+  .catItem .nm{font-size:12px;max-width:72px}
+  .catItem .cnt{display:none}.catItem .ico{font-size:21px}
   .logo em{display:none}
+}
+/* ---- phone: stacked header, 2-up grid, wrap-safe cards ---- */
+@media(max-width:640px){
+  .top{height:auto;padding:10px 14px 12px;flex-wrap:wrap;gap:10px}
+  .logo{font-size:20px}
+  .searchBox{order:3;flex-basis:100%;max-width:none}
+  .spacer{display:none}
+  input{font-size:16px}                         /* prevent iOS zoom-on-focus */
+  .grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .card{padding:10px;border-radius:15px}
+  .thumb{height:130px;font-size:46px;margin-bottom:9px}
+  .brand{font-size:10px}
+  .pname{font-size:13.5px;min-height:34px;margin:2px 0}
+  .size{font-size:11.5px}
+  .row{margin-top:9px;flex-wrap:wrap;row-gap:8px}   /* price + controls never overflow */
+  .price{font-size:16px}.mrp{font-size:11px}
+  .add{padding:8px 13px;font-size:13px;border-radius:10px}
+  .qtybox{gap:7px}.qtybox button,.ck{width:30px;height:30px}
+  .crumbs h2{font-size:20px}
+  .tag,.gotRibbon{top:10px;left:10px}
+  .dockinner{margin:0 10px 12px;padding:12px 14px;gap:10px}
+  .dockbtn{padding:10px 14px}
+  .sheet{max-width:none}
+  .banner{font-size:13px}
+}
+/* ---- very small phones: single-ish tidy ---- */
+@media(max-width:380px){
+  .grid{gap:10px}
+  .thumb{height:116px;font-size:42px}
+  .pname{font-size:13px;min-height:32px}
+  .add{padding:7px 11px}
 }
 </style>
 </head>
