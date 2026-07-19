@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thaila — grab & go</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#faf8f3; --ink:#191712; --card:#ffffff; --border:#ece7dd;
+  --sidebar:#15271d; --sideText:#eae7dd; --sideMuted:#9bb0a3;
+  --lime:#c9f24d; --green:#12a150; --coral:#ff5a4d; --muted:#8a8578;
+  --shadow:0 1px 2px rgba(25,23,18,.05),0 10px 26px rgba(25,23,18,.07);
+  --topH:74px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.disp,.price,.grand{font-family:'Bricolage Grotesque',sans-serif}
+button{font-family:inherit}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#d8d2c6;border-radius:10px}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:30;background:rgba(250,248,243,.9);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);height:var(--topH);display:flex;align-items:center;padding:0 20px;gap:16px}
+.logo{font-family:'Bricolage Grotesque';font-weight:800;font-size:23px;letter-spacing:-.5px;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo .dot{width:14px;height:14px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px rgba(201,242,77,.3)}
+.logo em{font-style:normal;font-family:'Inter';font-weight:500;font-size:11px;color:var(--muted)}
+.searchBox{flex:1;max-width:620px;display:flex;align-items:center;gap:8px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:0 6px 0 14px;box-shadow:var(--shadow)}
+.searchBox svg{flex:none;opacity:.5}
+.searchBox input{flex:1;border:0;background:none;outline:none;font-size:15.5px;padding:12px 4px;color:var(--ink);font-family:inherit}
+.mic{border:1px solid var(--border);background:var(--card);width:40px;height:40px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.mic.live{background:var(--coral);color:#fff;border-color:var(--coral);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,90,77,.5)}50%{box-shadow:0 0 0 7px rgba(255,90,77,0)}}
+.spacer{flex:1}
+
+/* layout */
+.layout{display:grid;grid-template-columns:250px 1fr;gap:22px;max-width:1280px;margin:0 auto;padding:20px 20px 130px;align-items:start}
+/* sidebar */
+.sidebar{position:sticky;top:calc(var(--topH) + 20px);background:var(--sidebar);color:var(--sideText);
+  border-radius:20px;padding:16px 14px;box-shadow:var(--shadow);max-height:calc(100vh - var(--topH) - 40px);display:flex;flex-direction:column}
+.sidebar h3{margin:2px 4px 12px;font-size:13px;text-transform:uppercase;letter-spacing:.14em;color:var(--sideMuted);font-family:'Inter';font-weight:700}
+.catsearch{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  border-radius:11px;padding:0 10px;margin-bottom:10px}
+.catsearch svg{opacity:.6}
+.catsearch input{flex:1;border:0;background:none;outline:none;color:#fff;font-size:13.5px;padding:10px 2px;font-family:inherit}
+.catsearch input::placeholder{color:var(--sideMuted)}
+.catlist{overflow:auto;display:flex;flex-direction:column;gap:2px;margin:0 -4px;padding:0 4px}
+.catItem{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;cursor:pointer;
+  color:var(--sideText);font-size:14px;font-weight:500;transition:background .12s;white-space:nowrap}
+.catItem:hover{background:rgba(255,255,255,.07)}
+.catItem.on{background:var(--lime);color:#12241a;font-weight:700}
+.catItem .ico{font-size:17px;width:22px;text-align:center;flex:none}
+.catItem .nm{overflow:hidden;text-overflow:ellipsis}
+.catItem .cnt{margin-left:auto;font-size:11px;color:var(--sideMuted);font-weight:600}
+.catItem.on .cnt{color:#3a5a3f}
+
+/* products */
+.main{min-width:0}
+.crumbs{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+.crumbs h2{margin:0;font-size:24px;letter-spacing:-.3px}
+.crumbs .count{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:13px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;position:relative;transition:transform .14s,box-shadow .14s}
+.card:hover{transform:translateY(-3px);box-shadow:0 3px 6px rgba(25,23,18,.06),0 18px 34px rgba(25,23,18,.10)}
+.card.oosCard{opacity:.6}
+.tag{position:absolute;top:12px;left:12px;background:var(--coral);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;z-index:2}
+.tag.o{background:#e7e2d8;color:#6b6355;left:auto;right:12px}
+.thumb{height:172px;border-radius:14px;background:#fff;border:1px solid var(--border);margin-bottom:11px;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:66px}
+.thumb img{width:100%;height:100%;object-fit:contain;padding:8px}
+.brand{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--green)}
+.pname{font-size:15px;font-weight:600;line-height:1.25;margin:3px 0;min-height:38px}
+.size{font-size:12.5px;color:var(--muted)}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:6px}
+.price{font-weight:800;font-size:19px}
+.mrp{font-size:12px;color:var(--muted);text-decoration:line-through;margin-left:5px;font-family:'Inter'}
+.add{border:0;background:var(--ink);color:#fff;font-weight:700;font-size:14px;border-radius:11px;padding:9px 16px;cursor:pointer;transition:.12s}
+.add:hover{background:var(--green)}
+.add:active{transform:translateY(1px)}
+.qtybox{display:flex;align-items:center;gap:9px}
+.qtybox button{width:31px;height:31px;border:1px solid var(--border);border-radius:9px;background:var(--card);font-weight:800;font-size:16px;cursor:pointer;line-height:1}
+.qtybox b{min-width:14px;text-align:center}
+.empty{grid-column:1/-1;text-align:center;padding:60px 10px;color:var(--muted)}
+.empty b{color:var(--ink)}
+.loadmore{grid-column:1/-1;text-align:center;margin-top:8px}
+.loadmore button{border:1px solid var(--border);background:var(--card);font-weight:700;padding:11px 20px;border-radius:12px;cursor:pointer;box-shadow:var(--shadow)}
+.banner{background:#fff;border:1px solid var(--border);border-radius:14px;padding:11px 15px;font-weight:500;font-size:14px;margin-bottom:16px;box-shadow:var(--shadow)}
+
+/* dock + sheet */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:center;pointer-events:none}
+.dockinner{pointer-events:auto;margin:0 16px 18px;max-width:1000px;width:calc(100% - 32px);background:var(--ink);color:#fff;
+  border-radius:16px;box-shadow:0 10px 34px rgba(0,0,0,.3);display:flex;align-items:center;gap:12px;padding:14px 18px}
+.dockinner .n{font-family:'Bricolage Grotesque';font-weight:800;font-size:16px}
+.dockinner .t{margin-left:auto;font-weight:600;opacity:.85}
+.dockbtn{border:0;background:var(--lime);color:#12241a;font-weight:800;border-radius:11px;padding:10px 17px;cursor:pointer}
+.scrim{position:fixed;inset:0;background:rgba(20,18,14,.5);z-index:50;display:none}
+.scrim.show{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--paper);border-top:1px solid var(--border);
+  border-radius:22px 22px 0 0;max-height:88vh;transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;max-width:640px;margin:0 auto}
+.sheet.show{transform:translateY(0)}
+.sheet header{padding:18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sheet header h2{margin:0;font-size:22px}
+.sheet .list{overflow:auto;padding:14px 16px;flex:1}
+.li{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--card);margin-bottom:9px;box-shadow:var(--shadow)}
+.li .info{flex:1;min-width:0}.li .info b{display:block;font-size:14px;font-weight:600}.li .info span{font-size:12px;color:var(--muted)}
+.li .lp{font-weight:800;font-family:'Bricolage Grotesque'}
+.rm{border:none;background:none;font-size:16px;cursor:pointer;opacity:.6}
+.sheet footer{padding:16px;border-top:1px solid var(--border);background:var(--card)}
+.grand{display:flex;justify-content:space-between;font-weight:800;font-size:21px;margin-bottom:12px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wabtn{grid-column:1/-1;border:0;background:#25D366;color:#04361e;font-weight:800;font-size:15px;padding:14px;border-radius:13px;cursor:pointer}
+.mini{border:1px solid var(--border);background:var(--paper);font-weight:700;padding:12px;border-radius:12px;cursor:pointer}
+.close{margin-left:auto;border:1px solid var(--border);background:var(--card);width:34px;height:34px;border-radius:10px;font-weight:700;cursor:pointer}
+.additem{display:flex;gap:8px;margin-bottom:14px}
+.additem input{flex:1;border:1px solid var(--border);border-radius:12px;padding:12px;font-family:inherit;font-size:14px;background:var(--card)}
+.additem button{border:0;background:var(--green);color:#fff;font-weight:800;border-radius:12px;padding:0 18px;cursor:pointer}
+.toast{position:fixed;bottom:98px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:600;padding:11px 18px;border-radius:20px;z-index:80;opacity:0;transition:opacity .2s;pointer-events:none;font-size:14px}
+.toast.show{opacity:1}
+/* checklist / got-it states */
+.ck{width:31px;height:31px;border:1.5px solid var(--green);border-radius:50%;background:var(--card);color:var(--green);
+  font-weight:800;font-size:15px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;flex:none}
+.ck.on{background:var(--green);color:#fff;border-color:var(--green)}
+.card.gotCard .thumb{filter:grayscale(.4);opacity:.75}
+.card.gotCard .pname{text-decoration:line-through;color:var(--muted)}
+.card .gotRibbon{position:absolute;top:12px;left:12px;background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;z-index:3}
+.li.done{opacity:.66}
+.li.done .info b{text-decoration:line-through;color:var(--muted)}
+.li .tick{width:30px;height:30px;border:1.5px solid var(--green);border-radius:50%;background:var(--card);color:var(--green);
+  font-weight:800;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;font-size:15px}
+.li.done .tick{background:var(--green);color:#fff}
+.prog{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.prog .track{flex:1;height:8px;background:#eae5db;border-radius:6px;overflow:hidden}
+.prog .fill{height:100%;background:var(--green);border-radius:6px;transition:width .25s}
+.grand small{display:block;font-family:'Inter';font-size:12px;font-weight:600;color:var(--green)}
+
+@media(max-width:860px){
+  .layout{grid-template-columns:1fr;gap:14px}
+  .sidebar{position:static;max-height:none;flex-direction:column}
+  .catlist{flex-direction:row;overflow-x:auto;gap:6px}
+  .catItem{flex-direction:column;gap:3px;padding:8px 12px;min-width:74px;text-align:center}
+  .catItem .cnt{display:none}.catItem .ico{font-size:20px}
+  .logo em{display:none}
+}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo"><span class="dot"></span>Thaila <em>grab &amp; go</em></div>
+  <div class="searchBox">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input id="q" placeholder="Search anything — milk, mith, कांदा, doodh, atta…" oninput="render()">
+    <button class="mic" id="mic" title="Voice search" onclick="voice()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+    </button>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h3>Categories</h3>
+    <div class="catsearch">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" color="#9bb0a3"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="catq" placeholder="Filter categories…" oninput="renderCats()">
+    </div>
+    <div class="catlist" id="catlist"></div>
+  </aside>
+
+  <main class="main">
+    <div id="shared" class="banner" style="display:none"></div>
+    <div class="crumbs"><h2 id="crumbTitle">All products</h2><span class="count" id="count"></span></div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<div class="dock"><div class="dockinner">
+  <span class="n" id="dockN">0 items</span><span class="t" id="dockT">₹0</span>
+  <button class="dockbtn" onclick="openSheet()">View list</button>
+</div></div>
+
+<div class="scrim" id="scrim" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <header><h2>Your list</h2><button class="close" onclick="closeSheet()">✕</button></header>
+  <div class="list" id="listBox">
+    <div class="additem">
+      <input id="customItem" placeholder="Add anything — kothimbir, 2 kg kanda…" onkeydown="if(event.key==='Enter')addCustom()">
+      <button onclick="addCustom()">Add</button>
+    </div>
+    <div id="items"></div>
+  </div>
+  <footer>
+    <div class="grand"><span>Still to buy</span><span id="grand">₹0</span></div>
+    <div class="actions">
+      <button class="wabtn" onclick="shareWhatsApp()">Share on WhatsApp</button>
+      <button class="mini" onclick="copyLink()">Copy link</button>
+      <button class="mini" onclick="clearList()">Clear list</button>
+    </div>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---- Marathi / Hindi / transliteration dictionary (concept -> english) ---- */
+const ALIAS = {
+  "doodh":"milk","दूध":"milk","dudh":"milk","loni":"butter","लोणी":"butter","makhan":"butter",
+  "dahi":"curd","दही":"curd","toop":"ghee","tup":"ghee","तूप":"ghee",
+  "paneer":"paneer","पनीर":"paneer","cheese":"cheese","sai":"cream","malai":"cream","cream":"cream",
+  "taak":"buttermilk","ताक":"buttermilk","chaas":"buttermilk",
+  "sakhar":"sugar","साखर":"sugar","meeth":"salt","mith":"salt","मीठ":"salt","namak":"salt",
+  "peeth":"flour atta","पीठ":"flour atta","atta":"atta flour","kanik":"wheat flour",
+  "tandool":"rice","तांदूळ":"rice","chawal":"rice","bhat":"rice",
+  "dal":"dal","डाळ":"dal","toor":"toor arhar","तूर":"toor","arhar":"toor",
+  "moong":"moong","मूग":"moong","masoor":"masoor","मसूर":"masoor","chana":"chana","चणा":"chana",
+  "harbhara":"chana","besan":"besan","बेसन":"besan","rava":"rava sooji","रवा":"rava",
+  "sooji":"sooji rava","maida":"maida","मैदा":"maida","poha":"poha","पोहे":"poha",
+  "sabudana":"sabudana","साबुदाणा":"sabudana","gul":"jaggery","गूळ":"jaggery","gud":"jaggery",
+  "tel":"oil","तेल":"oil","mohari":"mustard","मोहरी":"mustard","shengdana":"peanut groundnut","शेंगदाणे":"peanut",
+  "haldi":"turmeric","हळद":"turmeric","jeere":"cumin","jeera":"cumin","जिरे":"cumin",
+  "dhane":"coriander","धणे":"coriander","tikhat":"chilli","mirchi":"chilli","मिरची":"chilli",
+  "masala":"masala","मसाला":"masala","garam":"garam masala","tikha":"chilli",
+  "kanda":"onion","कांदा":"onion","batata":"potato","बटाटा":"potato","aloo":"potato",
+  "tomato":"tomato","tamatar":"tomato","टोमॅटो":"tomato","lasun":"garlic","लसूण":"garlic",
+  "ale":"ginger","aale":"ginger","आले":"ginger","adrak":"ginger","limbu":"lemon","लिंबू":"lemon",
+  "kothimbir":"coriander","कोथिंबीर":"coriander","bhaji":"vegetable","भाजी":"vegetable",
+  "palak":"spinach","पालक":"spinach","methi":"fenugreek","मेथी":"fenugreek","gajar":"carrot","गाजर":"carrot",
+  "vatana":"peas","वाटाणा":"peas","matar":"peas","kobi":"cabbage","कोबी":"cabbage","flower":"cauliflower",
+  "chaha":"tea","चहा":"tea","chai":"tea","coffee":"coffee","कॉफी":"coffee","kaapi":"coffee",
+  "pani":"water","पाणी":"water","pav":"bread pav","पाव":"bread","bread":"bread",
+  "anda":"egg","andi":"egg","अंडी":"egg","biskit":"biscuit","biscuit":"biscuit",
+  "chocolate":"chocolate","chaklet":"chocolate","namkeen":"namkeen","farsan":"namkeen","फरसाण":"namkeen",
+  "lonache":"pickle","लोणचे":"pickle","achar":"pickle","papad":"papad","पापड":"papad",
+  "sabun":"soap","साबण":"soap","shampoo":"shampoo","शाम्पू":"shampoo"
+};
+/* extended grocery vocabulary (Marathi/Hindi transliteration -> english) */
+Object.assign(ALIAS,{
+  // more vegetables
+  "dudhi":"bottle gourd","lauki":"bottle gourd","bhopla":"pumpkin","kaddu":"pumpkin","karle":"bitter gourd","karela":"bitter gourd",
+  "bhendi":"okra ladies finger","bhindi":"okra ladies finger","gavar":"cluster beans","valpapdi":"beans","tondli":"ivy gourd",
+  "padwal":"pointed gourd","ghosale":"ridge gourd","dodka":"ridge gourd","turai":"ridge gourd","suran":"yam","ratale":"sweet potato",
+  "mula":"radish","mooli":"radish","beet":"beetroot","farasbi":"french beans","shepu":"dill","kobi":"cabbage","phulkobi":"cauliflower",
+  "flower":"cauliflower","dhobli":"capsicum","simla":"capsicum","capsicum":"capsicum","vange":"brinjal eggplant","vangi":"brinjal",
+  "baingan":"brinjal eggplant","kakdi":"cucumber","arbi":"colocasia","alu":"colocasia potato","shevga":"drumstick","drumstick":"drumstick",
+  "kanda-pat":"spring onion","corn":"corn","makai":"corn","mushroom":"mushroom","aale-lasun":"ginger garlic",
+  // fruits
+  "seb":"apple","kela":"banana","santra":"orange","mosambi":"sweet lime","draksh":"grapes","dalimb":"pomegranate","anar":"pomegranate",
+  "papai":"papaya","chikoo":"sapota","sitafal":"custard apple","peru":"guava","aamba":"mango","amba":"mango","tarbuj":"watermelon",
+  "kharbuj":"muskmelon","ananas":"pineapple","strawberry":"strawberry","nariyal":"coconut","naral":"coconut","khajur":"dates",
+  // spices
+  "dalchini":"cinnamon","lavang":"clove","veldoda":"cardamom","elaichi":"cardamom","miri":"pepper","kali-miri":"black pepper",
+  "tejpan":"bay leaf","hing":"asafoetida","methi-dane":"fenugreek seeds","ova":"ajwain carom","ajwain":"carom","badishep":"fennel saunf",
+  "saunf":"fennel","khaskhas":"poppy seeds","til":"sesame","kadipatta":"curry leaves","kokum":"kokum","chinch":"tamarind","imli":"tamarind",
+  "amchur":"dry mango","kasuri":"kasuri methi","dhania":"coriander","laal-tikhat":"red chilli powder","kanda-lasun":"onion garlic masala",
+  // pulses & grains
+  "udad":"urad dal","urad":"urad dal","matki":"moth bean","chavali":"cowpea","kulith":"horse gram","hulga":"horse gram","rajma":"kidney beans",
+  "kabuli":"chickpea chole","chole":"chickpea","jwari":"jowar sorghum","jowar":"jowar","bajri":"bajra millet","bajra":"bajra",
+  "nachni":"ragi millet","ragi":"ragi","varai":"samo","bhagar":"samo","sabudana":"sabudana","daliya":"broken wheat","lapshi":"broken wheat",
+  // dairy sweets
+  "shrikhand":"shrikhand","amrakhand":"shrikhand","basundi":"basundi","khava":"khoya mawa","mawa":"khoya","pedha":"peda","barfi":"barfi",
+  // household
+  "farshi":"floor cleaner","jhadu":"broom","phenyl":"phenyl cleaner","nirma":"detergent","surf":"detergent","vim":"dishwash",
+  "agarbatti":"agarbatti incense","udbatti":"incense","kapur":"camphor","kaadi":"matches","matches":"matches","garbage":"garbage bag",
+  "napkin":"tissue napkin","toilet":"toilet cleaner","harpic":"toilet cleaner","phinail":"phenyl",
+  // personal care
+  "manjan":"tooth powder","kanga":"comb","blade":"razor blade","powder":"talc powder","talc":"talc","cream":"face cream",
+  "tel-kes":"hair oil","hairoil":"hair oil","facewash":"face wash","lotion":"body lotion","kajal":"kajal","bindi":"bindi",
+  // snacks & ready
+  "chakli":"chakli","sev":"sev","chivda":"chivda","ladu":"laddu","laddu":"laddu","shankarpali":"shankarpali","karanji":"karanji",
+  "wafer":"wafers chips","fryums":"fryums","poha-chivda":"poha chivda","upma":"upma","idli":"idli","dosa":"dosa","dhokla":"dhokla",
+  // beverages
+  "sarbat":"syrup sharbat","sharbat":"syrup","limbu-pani":"lemon drink","thums":"cola soft drink","frooti":"mango drink","tang":"drink mix",
+  // baby & misc
+  "cerelac":"baby food","lahya":"puffed rice","kurmura":"puffed rice","churmura":"puffed rice","murmura":"puffed rice","poffed":"puffed rice",
+  "shengdana-tel":"groundnut oil","tup-loni":"ghee butter","dahi-doodh":"curd milk"
+});
+function ph(s){
+  s=(s||"").toLowerCase();
+  s=s.replace(/aa/g,"a").replace(/ee/g,"i").replace(/oo/g,"u").replace(/ou/g,"u").replace(/ie/g,"i").replace(/ai/g,"e");
+  s=s.replace(/th/g,"t").replace(/dh/g,"d").replace(/ph/g,"f").replace(/gh/g,"g").replace(/kh/g,"k").replace(/sh/g,"s").replace(/ch/g,"c");
+  s=s.replace(/w/g,"v").replace(/z/g,"j").replace(/q/g,"k").replace(/x/g,"ks").replace(/y/g,"i");
+  s=s.replace(/[^a-z]/g,"").replace(/(.)\1+/g,"$1");
+  return s;
+}
+const PH_ALIAS={};for(const k in ALIAS){const p=ph(k);if(p)PH_ALIAS[p]=(PH_ALIAS[p]?PH_ALIAS[p]+" ":"")+ALIAS[k];}
+
+let DB={products:[],categories:[]}, list={}, activeCat="All", shown=60, catCounts={};
+const $=s=>document.querySelector(s);
+const money=n=>"₹"+(Math.round(n*100)/100).toLocaleString('en-IN');
+const keyOf=p=>p.i||(p.n+"|"+p.s);
+const norm=s=>(s||"").toLowerCase().trim();
+const pretty=c=>c.replace(/-/g," ").replace(/\b\w/g,m=>m.toUpperCase());
+
+function phWords(s){return norm(s).split(/[^a-z0-9ऀ-ॿ]+/).filter(Boolean).map(w=>ph(w)).filter(w=>w.length>1);}
+fetch("products.json").then(r=>r.json()).then(d=>{
+  DB=d; catCounts={};
+  d.products.forEach(p=>{
+    const l0=(p.c||"").split("/")[0];if(l0)catCounts[l0]=(catCounts[l0]||0)+1;
+    p._blob=norm(p.n+" "+p.b+" "+p.c+" "+p.s);          // for direct/alias substring
+    p._ph=phWords(p.n+" "+p.b);                          // phonetic word tokens
+  });
+  renderCats(); loadFromURL(); render(); refreshDock();
+}).catch(()=>{
+  $("#grid").innerHTML=`<div class="empty">Couldn't load <b>products.json</b>.<br>For local preview run <b>python3 -m http.server</b> in this folder.</div>`;
+  loadFromURL(); refreshDock();
+});
+
+/* ------- category sidebar ------- */
+const CAT_ICON=[["fruit","🍎"],["vegetable","🥬"],["dairy","🥛"],["bakery","🍞"],["bread","🍞"],["egg","🥚"],
+["meat","🍗"],["fish","🐟"],["beverage","🥤"],["drink","🥤"],["tea","🍵"],["coffee","☕"],["snack","🍪"],["biscuit","🍪"],
+["chocolate","🍫"],["chip","🍟"],["namkeen","🥨"],["foodgrain","🌾"],["oil","🫗"],["masala","🌶️"],["atta","🌾"],["rice","🍚"],
+["dal","🫘"],["dry-fruit","🥜"],["gourmet","🌍"],["world","🌍"],["frozen","🧊"],["ice","🍨"],["beauty","💄"],["hygiene","🧴"],
+["hair","🧴"],["skin","🧴"],["bath","🧼"],["cleaning","🧽"],["household","🧺"],["kitchen","🍳"],["garden","🪴"],["pet","🐾"],
+["baby","🍼"],["health","💊"],["pharma","💊"],["sauce","🥫"],["spread","🥜"],["breakfast","🥣"],["cereal","🥣"],["sweet","🍬"],["paan","🍃"]];
+function catIcon(slug){const s=norm(slug);for(const [w,e] of CAT_ICON)if(s.includes(w))return e;return "🛒";}
+
+function renderCats(){
+  const f=norm($("#catq").value);
+  const cats=(DB.categories||[]).filter(c=>!f||norm(pretty(c)).includes(f)||norm(c).includes(f));
+  let html=`<div class="catItem ${activeCat==='All'?'on':''}" onclick="pickCat('All')"><span class="ico">✨</span><span class="nm">All products</span><span class="cnt">${(DB.products||[]).length.toLocaleString('en-IN')}</span></div>`;
+  html+=cats.map(c=>`<div class="catItem ${activeCat===c?'on':''}" onclick="pickCat('${c.replace(/'/g,"")}')">
+     <span class="ico">${catIcon(c)}</span><span class="nm">${pretty(c)}</span><span class="cnt">${(catCounts[c]||0).toLocaleString('en-IN')}</span></div>`).join("");
+  if(!cats.length&&f) html+=`<div style="color:var(--sideMuted);font-size:13px;padding:8px 11px">No category matches</div>`;
+  $("#catlist").innerHTML=html;
+}
+function pickCat(c){activeCat=c;shown=60;$("#crumbTitle").textContent=c==='All'?'All products':pretty(c);renderCats();render();window.scrollTo({top:0,behavior:'smooth'});}
+
+/* ------- search + grid ------- */
+function expand(t){
+  const out=new Set([t]);
+  if(ALIAS[t]) ALIAS[t].split(" ").forEach(x=>out.add(x));
+  const p=ph(t); if(p&&PH_ALIAS[p]) PH_ALIAS[p].split(" ").forEach(x=>out.add(x));
+  if(t.length>3&&t.endsWith("s")) out.add(t.slice(0,-1));
+  return [...out];
+}
+function matchP(p,q){
+  const blob=p._blob||norm(p.n+" "+p.b+" "+p.c+" "+p.s), phs=p._ph||[];
+  return q.every(t=>{
+    if(expand(t).some(e=>blob.includes(e))) return true;   // direct + dictionary
+    const pt=ph(t);                                        // phonetic: a product word contains the query
+    return pt.length>=3 && phs.some(w=>w.includes(pt));
+  });
+}
+function render(){
+  const qtokens=norm($("#q").value).split(/[\s,]+/).filter(Boolean);
+  let arr=DB.products;
+  if(activeCat!=="All") arr=arr.filter(p=>(p.c||"").split("/")[0]===activeCat);
+  if(qtokens.length) arr=arr.filter(p=>matchP(p,qtokens));
+  const total=arr.length;
+  $("#count").textContent=total?`${total.toLocaleString('en-IN')} item${total!==1?'s':''}`:"";
+  const g=$("#grid");
+  if(!total){g.innerHTML=`<div class="empty"><b>No matches.</b><br>Try milk · mith · कांदा · doodh · atta</div>`;return;}
+  g.innerHTML=arr.slice(0,shown).map(card).join("")
+    +(total>shown?`<div class="loadmore"><button onclick="shown+=60;render()">Load ${Math.min(60,total-shown)} more · ${total-shown} left</button></div>`:"");
+}
+function card(p){
+  const k=keyOf(p),inList=list[k],got=inList&&inList.done,emo=pickEmoji(p);
+  const img=p.g?`<img src="${p.g}" loading="lazy" onerror="this.parentNode.textContent='${emo}'">`:emo;
+  return `<div class="card ${got?'gotCard':''}">
+    ${got?`<span class="gotRibbon">✓ Got</span>`:(p.d?`<span class="tag">${p.d}</span>`:"")}
+    <div class="thumb">${img}</div>
+    <div class="brand">${p.b||"&nbsp;"}</div>
+    <div class="pname">${p.n}</div>
+    <div class="size">${p.s||""}</div>
+    <div class="row">
+      <div><span class="price">${money(p.p)}</span>${p.m>p.p?`<span class="mrp">${money(p.m)}</span>`:""}</div>
+      ${inList?`<div class="qtybox"><button class="ck ${got?'on':''}" title="Mark as bought" onclick="toggleDone('${k}')">✓</button><button onclick="chg('${k}',-1)">−</button><b>${inList.q}</b><button onclick="chg('${k}',1)">+</button></div>`
+        :`<button class="add" onclick='add(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Add</button>`}
+    </div></div>`;
+}
+const EMO=[["ghee","🫙"],["paneer","🧀"],["cheese","🧀"],["butter","🧈"],["curd","🥣"],["yogurt","🥣"],["milk","🥛"],
+["cream","🍥"],["bread","🍞"],["pav","🍞"],["bun","🍞"],["egg","🥚"],["chocolate","🍫"],["biscuit","🍪"],["cookie","🍪"],
+["chips","🍟"],["wafer","🍟"],["kurkure","🍟"],["namkeen","🥨"],["bhujia","🥨"],["mixture","🥨"],["popcorn","🍿"],
+["noodle","🍜"],["maggi","🍜"],["pasta","🍝"],["tea","🍵"],["coffee","☕"],["juice","🧃"],["cola","🥤"],["soft drink","🥤"],
+["soda","🥤"],["water","💧"],["oil","🫗"],["atta","🌾"],["flour","🌾"],["maida","🌾"],["rice","🍚"],["dal","🫘"],["pulse","🫘"],
+["besan","🌾"],["poha","🍚"],["rava","🌾"],["sooji","🌾"],["salt","🧂"],["sugar","🍬"],["jaggery","🟤"],["masala","🌶️"],
+["turmeric","🟡"],["chilli","🌶️"],["mirchi","🌶️"],["cumin","🫘"],["coriander","🌿"],["onion","🧅"],["potato","🥔"],
+["tomato","🍅"],["garlic","🧄"],["ginger","🫚"],["lemon","🍋"],["carrot","🥕"],["peas","🫛"],["spinach","🥬"],["cabbage","🥬"],
+["cauliflower","🥦"],["cucumber","🥒"],["brinjal","🍆"],["banana","🍌"],["apple","🍎"],["mango","🥭"],["orange","🍊"],
+["grape","🍇"],["fruit","🍎"],["vegetable","🥗"],["honey","🍯"],["jam","🍓"],["ketchup","🍅"],["sauce","🥫"],["pickle","🫙"],
+["papad","🫓"],["peanut","🥜"],["soap","🧼"],["handwash","🧼"],["shampoo","🧴"],["toothpaste","🪥"],["detergent","🧺"],
+["tissue","🧻"],["diaper","🍼"],["baby","🍼"],["sanitary","🩸"],["cleaner","🧽"],["chicken","🍗"],["fish","🐟"],["meat","🍖"],
+["ice cream","🍨"],["frozen","🧊"],["chana","🫘"],["moong","🫘"],["oats","🥣"],["cornflakes","🥣"],["almond","🌰"],["cashew","🌰"]];
+function pickEmoji(p){const h=norm(p.n+" "+p.c+" "+p.b);for(const [w,e] of EMO)if(h.includes(w))return e;return "🛍️";}
+
+/* ------- list ------- */
+function add(p){const k=keyOf(p);list[k]={n:p.n,b:p.b,s:p.s,p:p.p,q:1,done:false};save();render();refreshDock();toast("Added");}
+function chg(k,d){if(!list[k])return;list[k].q+=d;if(list[k].q<=0)delete list[k];save();render();renderItems();refreshDock();}
+function addCustom(){const v=$("#customItem").value.trim();if(!v)return;list["c_"+v.toLowerCase()]={n:v,b:"",s:"",p:0,q:1,done:false};$("#customItem").value="";save();renderItems();refreshDock();toast("Added");}
+function toggleDone(k){if(!list[k])return;list[k].done=!list[k].done;save();render();renderItems();refreshDock();}
+function clearList(){list={};save();render();renderItems();refreshDock();}
+const itemsArr=()=>Object.entries(list);
+const count=()=>itemsArr().reduce((a,[,v])=>a+v.q,0);
+const needCount=()=>itemsArr().filter(([,v])=>!v.done).reduce((a,[,v])=>a+v.q,0);
+const gotItems=()=>itemsArr().filter(([,v])=>v.done).length;
+const needTotal=()=>itemsArr().filter(([,v])=>!v.done).reduce((a,[,v])=>a+v.p*v.q,0);
+function refreshDock(){
+  const n=itemsArr().length;
+  if(n && gotItems()===n){$("#dockN").textContent="All bought ✓";$("#dockT").textContent="";return;}
+  $("#dockN").textContent=(needCount()||0)+" to buy";$("#dockT").textContent=needTotal()?money(needTotal())+" left":money(0);
+}
+function renderItems(){
+  const el=$("#items");
+  const arr=itemsArr().sort((a,b)=>(a[1].done?1:0)-(b[1].done?1:0));  // pending first, bought sink down
+  if(!arr.length){el.innerHTML=`<div class="empty" style="padding:26px">Nothing yet — add items.</div>`;$("#grand").innerHTML="₹0";return;}
+  const done=arr.filter(([,v])=>v.done).length, tot=arr.length, pct=Math.round(done/tot*100);
+  const prog=`<div class="prog"><span>${done} of ${tot} bought</span><div class="track"><div class="fill" style="width:${pct}%"></div></div></div>`;
+  el.innerHTML=prog+arr.map(([k,v])=>`<div class="li ${v.done?'done':''}">
+     <button class="tick" title="${v.done?'Bought':'Mark as bought'}" onclick="toggleDone('${k}')">${v.done?'✓':''}</button>
+     <div class="info"><b>${v.n}</b><span>${v.b?v.b+" · ":""}${v.s||""}${v.p?" · "+money(v.p):""}</span></div>
+     <div class="qtybox"><button onclick="chg('${k}',-1)">−</button><b>${v.q}</b><button onclick="chg('${k}',1)">+</button></div>
+     <div class="lp">${v.p?money(v.p*v.q):""}</div>
+     <button class="rm" onclick="delete list['${k}'];save();renderItems();render();refreshDock()">🗑</button></div>`).join("");
+  $("#grand").innerHTML=`${money(needTotal())}<small>${done?"✓ "+done+" already bought":"nothing bought yet"}</small>`;
+}
+function openSheet(){renderItems();$("#scrim").classList.add('show');$("#sheet").classList.add('show');}
+function closeSheet(){$("#scrim").classList.remove('show');$("#sheet").classList.remove('show');}
+
+/* ------- share ------- */
+function save(){try{localStorage.setItem("thaila_list",JSON.stringify(list));}catch(e){}}
+function loadSaved(){try{list=JSON.parse(localStorage.getItem("thaila_list")||"{}");}catch(e){list={};}}
+function encodeList(){const arr=itemsArr().map(([,v])=>[v.n,v.s||"",v.p||0,v.q,v.b||"",v.done?1:0]);return btoa(unescape(encodeURIComponent(JSON.stringify(arr)))).replace(/=+$/,"");}
+function decodeList(str){try{const arr=JSON.parse(decodeURIComponent(escape(atob(str))));const o={};arr.forEach((x,i)=>{o["u_"+i]={n:x[0],s:x[1],p:x[2],q:x[3],b:x[4]||"",done:!!x[5]};});return o;}catch(e){return null;}}
+const shareURL=()=>location.origin+location.pathname+"#l="+encodeList();
+function loadFromURL(){const m=location.hash.match(/l=([^&]+)/);if(!m){loadSaved();return;}
+  const inc=decodeList(m[1]);if(inc){list=inc;save();$("#shared").style.display="block";
+    $("#shared").textContent="📥 Shared list opened ("+count()+" items"+(gotItems()?", "+gotItems()+" already bought":"")+"). Tick things off and re-share.";setTimeout(openSheet,400);}else loadSaved();}
+function shareWhatsApp(){const arr=itemsArr();if(!arr.length){toast("List is empty");return;}
+  const need=arr.filter(([,v])=>!v.done), got=arr.filter(([,v])=>v.done);
+  let txt="🛍️ *Thaila list* — "+got.length+" got / "+need.length+" to buy\n";
+  if(need.length){txt+="\n*Still need:*";need.forEach(([,v])=>{txt+="\n⬜ "+v.n+(v.s?" — "+v.s:"")+" ×"+v.q;});}
+  if(got.length){txt+="\n\n*Already have:*";got.forEach(([,v])=>{txt+="\n✅ "+v.n+(v.s?" — "+v.s:"")+" ×"+v.q;});}
+  txt+="\n\n✏️ Open & edit:\n"+shareURL();window.open("https://wa.me/?text="+encodeURIComponent(txt),"_blank");}
+function copyLink(){navigator.clipboard.writeText(shareURL()).then(()=>toast("Link copied"),()=>toast("Copy failed"));}
+
+/* ------- voice ------- */
+let rec=null;
+function voice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast("Voice not supported here");return;}
+  if(rec){rec.stop();rec=null;return;}
+  rec=new SR();rec.lang="en-IN";rec.interimResults=false;rec.maxAlternatives=3;
+  $("#mic").classList.add('live');
+  rec.onresult=e=>{$("#q").value=e.results[0][0].transcript;render();};
+  rec.onerror=()=>toast("Didn't catch that");
+  rec.onend=()=>{$("#mic").classList.remove('live');rec=null;};
+  rec.start();
+}
+let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1400);}
+</script>
+</body>
+</html>
